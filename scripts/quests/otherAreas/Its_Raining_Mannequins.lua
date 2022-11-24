@@ -177,6 +177,79 @@ quest.sections =
             },
         },
     },
+    {
+        check = function(player, status, vars)
+            return status == xi.quest.status.COMPLETED
+        end,
+
+        [xi.zone.MHAURA] =
+        {
+            ['Fyi_Chalmwoh'] =
+            {
+                onTrigger = function(player, npc)
+                    -- clear out vars
+                    player:setLocalVar("alreadyOwned", 0)
+                    for i = 1, 8 do
+                        if player:hasItem(xi.items.HUME_M_MANNEQUIN + i - 1) then
+                            player:setLocalVar("alreadyOwned", utils.setBit(player:getLocalVar("alreadyOwned"), i - 1, 1))
+                        end
+                    end
+
+                    return quest:event(318, 0, player:getLocalVar("alreadyOwned"), 100000, 2000):replaceDefault()
+                end,
+
+                onTrade = function(player, npc, trade)
+                    if npcUtil.tradeHasAny(trade, {
+                        xi.items.HUME_M_MANNEQUIN,
+                        xi.items.HUME_F_MANNEQUIN,
+                        xi.items.ELVAAN_M_MANNEQUIN,
+                        xi.items.ELVAAN_F_MANNEQUIN,
+                        xi.items.TARUTARU_M_MANNEQUIN,
+                        xi.items.TARUTARU_F_MANNEQUIN,
+                        xi.items.MITHRA_MANNEQUIN,
+                        xi.items.GALKA_MANNEQUIN,
+                         })
+                    then
+                        -- clear out var
+                        player:setLocalVar("alreadyOwned", 0)
+                        for i = 1, 8 do
+                            if player:hasItem(xi.items.HUME_M_MANNEQUIN + i - 1) then
+                                player:setLocalVar("alreadyOwned", utils.setBit(player:getLocalVar("alreadyOwned"), i - 1, 1))
+                            end
+                        end
+
+                        return quest:event(319, 2, player:getLocalVar("alreadyOwned"), 100000, 2000)
+                    end
+                end,
+            },
+            onEventUpdate = {
+                [318] = function(player, csid, option, npc)
+                    if player:getGil() >= 100000 then
+                        player:updateEvent(1, 1, 0, 2000, option, 1, 0)
+                    end
+                end,
+            },
+            onEventFinish =
+            {
+                [318] = function(player, csid, option, npc)
+                    local chosenMannequin = xi.items.HUME_M_MANNEQUIN + option - 1
+                    if option > 0 and player:delGil(100000) then
+                        player:addItem({ id = chosenMannequin, exdata = { [18] = option, [19] = 0 } })
+                        player:messageSpecial(mhauraID.text.ITEM_OBTAINED, chosenMannequin)
+                    end
+                end,
+
+                [319] = function(player, csid, option, npc)
+                    local chosenMannequin = xi.items.HUME_M_MANNEQUIN + option - 1
+                    if option > 0 and player:delGil(2000) then
+                        player:tradeComplete()
+                        player:addItem({ id = chosenMannequin, exdata = { [18] = option, [19] = 0 } })
+                        player:messageSpecial(mhauraID.text.ITEM_OBTAINED, chosenMannequin)
+                    end
+                end,
+            },
+        },
+    },
 }
 
 return quest
